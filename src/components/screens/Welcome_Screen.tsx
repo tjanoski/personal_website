@@ -27,14 +27,11 @@ export default function Screen_Selector(){
                         'Hi There', // Types 'One'
                         3000, // Waits 1s
                         'Would you like to continue? (y/n)',
-                        () => {
-                            console.log('Done typing!'); // Place optional callbacks anywhere in the array
-                        }
                     ]}
                     speed={10}
                     deletionSpeed={80}
                     cursor={true}
-                    style={{ fontSize: '1em' }}
+                    style={{ fontSize: '36px' }}
                 />
             </Welcome_Text>
         </Welcome_Container>

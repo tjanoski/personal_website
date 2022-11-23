@@ -17,14 +17,20 @@ export function useKeyPress(targetKey: string | number) {
       setKeyPressed(false);
     }
   };
+
+  const focusHandler = () => {
+    setKeyPressed(false)
+  }
   // Add event listeners
   useEffect(() => {
     window.addEventListener("keydown", downHandler);
     window.addEventListener("keyup", upHandler);
+    window.addEventListener("focus", focusHandler)
     // Remove event listeners on cleanup
     return () => {
       window.removeEventListener("keydown", downHandler);
       window.removeEventListener("keyup", upHandler);
+      window.removeEventListener("focus", focusHandler)
     };
   }, []); // Empty array ensures that effect is only run on mount and unmount
   return keyPressed;

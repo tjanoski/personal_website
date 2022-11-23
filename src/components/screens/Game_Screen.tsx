@@ -6,7 +6,6 @@ const Welcome_Text = styled.h1`
   color: lawngreen;
   font-weight: 100;
   font-family: "Digitalist";
-  padding: 20%;
 `;
 
 const Welcome_Container = styled.div`
@@ -35,10 +34,11 @@ export default function Game_Screen(){
                     cursor={true}
                     style={{ fontSize: '1em' }}
                 />
+                {isPlaying &&
+                    <Welcome_Text> Currently In development </Welcome_Text>
+                }
             </Welcome_Text>
-            {isPlaying &&
-                <h1> playing </h1>
-            }
+
         </Welcome_Container>
     )
 }

@@ -1,10 +1,10 @@
 import React, {Dispatch, SetStateAction, useEffect, useState} from 'react';
 import styled from '@emotion/styled';
-import { TypeAnimation } from 'react-type-animation';
 import { keyframes } from "@emotion/react";
 import InputUnstyled from '@mui/base/InputUnstyled';
 import {useKeyPress} from "../hooks/ButtonCaptureHook";
 import {TextType, TextOutput, SCREEN_NAMES} from "../ScreenSelectorConsts";
+import PDF from '../../assets/sample.pdf'
 
 const Welcome_Container = styled.div`
   width: 100%;
@@ -15,6 +15,7 @@ const Welcome_Container = styled.div`
   padding: 20px;
   padding-left: 50px;
   padding-right: 50px;
+  overflow: scroll;
 `;
 
 const blinkAnimation = keyframes`
@@ -33,7 +34,6 @@ const Blinker = styled.span`
 
 const EnteredLine = styled.div`
   width: 100%;
-  text-align: unset;
   left-padding: 30px;
   display: flex;
   flex-direction: row;
@@ -49,7 +49,8 @@ const ConsoleLine = styled.div`
 `
 
 const StyledInputElement = styled.input`
-  //height: 24px;
+  width: 100%;
+  flex-grow: 1;
   outline: none;
   font-family: 'digitalist';
   font-size: inherit;
@@ -59,8 +60,6 @@ const StyledInputElement = styled.input`
   box-shadow: none;
   border: none;
   overflow: visible;
-  overflow-y: visible;
-  overflow-block: visible;
   padding: 0;
   `
 
@@ -80,7 +79,7 @@ const CustomInput = React.forwardRef(function CustomInput(
     ref: React.ForwardedRef<HTMLDivElement>,
 ) {
     return (
-        <InputUnstyled slots={{ input: StyledInputElement }} {...props} ref={ref} />
+        <InputUnstyled slots={{ input: StyledInputElement, textArea: { maxWidth: '100%'} }} {...props} ref={ref} />
     );
 });
 
@@ -93,19 +92,28 @@ export default function Main_Screen({
     const [enteredUserInput, setEnteredUserInput] = useState<TextOutput[]>([])
     const [userInput, setUserInput] = useState<string>('')
     const [userInputLock, setUserInputLock] = useState<boolean>(false)
-
+    const [yesCallback, setYesCallback] = useState(() => () => console.log('callback ran'))
     const pressedEnter = useKeyPress(13)
+    const pressedY = useKeyPress('y')
+    const pressedN = useKeyPress('n')
 
     const parseCommand = (command: string) => {
+        command = command.toLowerCase()
         if (command == 'clear') {
             setEnteredUserInput([]);
-        }
-        if (command == 'help') {
-            const CMDS = 'Available Commands: help clear play resume'
-            setEnteredUserInput(previous => previous.concat([{text: CMDS, type: TextType.CONSOLE_OUTPUT}]))
-        }
-        if (command == 'play') {
+        } else if (command == 'help') {
+            const msg = 'Available Commands: HELP CLEAR PLAY RESUME'
+            setEnteredUserInput(previous => previous.concat([{text: msg, type: TextType.CONSOLE_OUTPUT}]))
+        } else if (command == 'play') {
             setCurrentScreen(SCREEN_NAMES.IDLE_GAME)
+        } else if (command == 'resume') {
+            setUserInputLock(true)
+            const msg = 'This will open a new window, proceed? (y/n)'
+            setEnteredUserInput(previous => previous.concat([{text: msg, type: TextType.CONSOLE_OUTPUT}]))
+            setYesCallback(() => () =>  window.open(PDF))
+        } else {
+            const CMDS = 'Unrecognized command: Type HELP for list of available commands'
+            setEnteredUserInput(previous => previous.concat([{text: CMDS, type: TextType.CONSOLE_OUTPUT}]))
         }
     }
 
@@ -115,17 +123,24 @@ export default function Main_Screen({
     }
     const enterLine = () => {
         const command = userInput
-        setUserInputLock(true)
         setEnteredUserInput(previous => previous.concat({text: command, type: TextType.USER_COMMAND}))
         setUserInput('')
         parseCommand(command)
-        setUserInputLock(false)
     }
     useEffect(() => {
         if(pressedEnter && userInput !== ''){
             enterLine();
         }
-    }, [pressedEnter])
+        if(userInputLock){
+            if(pressedY){
+                yesCallback()
+                setUserInputLock(false)
+                setYesCallback(() => console.log('nothing sandwich'))
+            } else if (pressedN){
+                setUserInputLock(false)
+            }
+        }
+    }, [pressedEnter, pressedY, pressedN])
 
     const handleInputChange = (e: any) => {
         setUserInput(e.target.value)
@@ -141,15 +156,18 @@ export default function Main_Screen({
             {enteredUserInput.map((output) => {
                 return textOutputSelector(output)
             })}
-            <EnteredLine>
-                <Blinker>
-                    *&#62;&nbsp;
-                </Blinker>
-                <CustomInput autoFocus={true} disabled={userInputLock}
-                             onChange={handleInputChange}
-                             value={userInput}
-                />
-            </EnteredLine>
+            {!userInputLock &&
+                <EnteredLine>
+                        <Blinker>
+                            *&#62;&nbsp;
+                        </Blinker>
+                        <CustomInput autoFocus={true} disabled={userInputLock}
+                        onChange={handleInputChange}
+                        value={userInput}
+                        style={{width: '100%'}}
+                        />
+                </EnteredLine>
+            }
         </Welcome_Container>
     )
 }
